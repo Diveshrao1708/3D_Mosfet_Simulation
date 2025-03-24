@@ -1,0 +1,63 @@
+go atlas
+
+# Define 3D mesh with more refined discretization
+mesh three.d
+x.mesh loc=0.0 spac=0.05
+x.mesh loc=0.5 spac=0.02
+x.mesh loc=1.0 spac=0.02
+x.mesh loc=1.5 spac=0.02
+x.mesh loc=2.0 spac=0.05
+y.mesh loc=0.0 spac=0.05
+y.mesh loc=0.5 spac=0.02
+y.mesh loc=1.0 spac=0.05
+z.mesh loc=0.0 spac=0.01
+z.mesh loc=0.2 spac=0.02
+z.mesh loc=0.4 spac=0.01
+
+
+
+# Define regions with more precise boundaries
+region num=1 silicon name=substrate x.min=0.0 x.max=2.0 y.min=0.0 y.max=1.0 z.min=0.0 z.max=0.4
+region num=2 material=Aluminum name=source x.min=0.0 x.max=0.5 y.min=0.0 y.max=1.0 z.min=0.0 z.max=0.2
+region num=3 material=Aluminum name=drain x.min=1.5 x.max=2.0 y.min=0.0 y.max=1.0 z.min=0.0 z.max=0.2
+region num=4 polysilicon name=gate x.min=0.5 x.max=1.5 y.min=0.0 y.max=1.0 z.min=0.0 z.max=0.05
+region num=5 oxide name=gate_oxide x.min=0.5 x.max=1.5 y.min=0.0 y.max=1.0 z.min=0.05 z.max=0.1
+
+# Define doping with more detailed concentration
+doping uniform conc=1e16 p.type region=1
+doping uniform conc=1e20 n.type region=2
+doping uniform conc=1e20 n.type region=3
+
+# Define electrodes
+electrode name=source x.min=0.0 x.max=0.5 y.min=0.0 y.max=1.0 z.min=0.0 z.max=0.2
+electrode name=drain x.min=1.5 x.max=2.0 y.min=0.0 y.max=1.0 z.min=0.0 z.max=0.2
+electrode name=gate x.min=0.5 x.max=1.5 y.min=0.0 y.max=1.0 z.min=0.0 z.max=0.05
+electrode name=substrate z.max=0.0
+
+# Define material models with comprehensive physics
+models srh auger bgn fldmob temp=300 conmob
+
+
+
+method newton carriers=2 
+solve init
+
+# ID-VGS Characterization (Gate Voltage Sweep)
+log outf=idvgs.log
+solve vdrain=2 vgate=0 vfinal=10 vstep=1
+log off
+
+# ID-VDS Characterization (Drain Voltage Sweep)
+log outf=idvds.log
+solve vgate=3 vdrain=0 vfinal=8 vstep=1
+log off
+
+# Save simulation structure
+save outf=mosfet_3d_final.str
+
+# Plot results
+tonyplot3d mosfet_3d_final.str
+tonyplot idvgs.log
+tonyplot idvds
+
+quit
